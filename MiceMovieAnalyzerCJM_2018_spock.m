@@ -1,29 +1,35 @@
-function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFrame]=MiceMovieAnalyzerCJM_2018_batch(Movie_fn,StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,InteractionZones,ThresholdValue,MousePixelSize,dsFactor)
+function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFrame]=MiceMovieAnalyzerCJM_2018_spock(Movie_fn,StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,InteractionZones,ThresholdValue,MousePixelSize,dsFactor)
    %%%%% The purpose of this function is to analyze the behavioral data.
    %%%%% It can evaluate general features about a single mouse
    %%%%% behavior, such as location and its derivatives.
    %%%%% It is also usefull for analyzing social recognition paradigms
    %%%%% and evaluate the time spent near a noval versus familiar conspecifics.
-   %%%%% The addition in this algorism is for tracking the mouse nose and
-   %%%%% directionality.
+
    
     
   MissedFrame =0;
   MouseLoc=[];
   InteractionTimes=cell(1,2);
   CompartmentTimes=cell(1,3);
-  %Film = VideoReader(Movie_fn);
   MF_indx(1) = StartingFrame;  
-%   EndingFrame = StartingFrame+(600*30);
- Film = VideoReader(Movie_fn);
-  for k=StartingFrame:dsFactor:EndingFrame
-     %%%%% open the image, convert it to black and white and clean it from noise 
-     %%%%% High and low thresholds in this algorithm are used for detection
-     %%%%% of the tail outside of the ellipse fitted to the mouse
-     %%%%% boundaries. low threshold is for finding the ellipse and high
-     %%%%% threshold is for finding the tail outside of the ellipse.
-     cdataRGB=read(Film,k);
-     cdataBW_ThresholdValue=im2bw(cdataRGB,ThresholdValue);
+  Film = VideoReader(Movie_fn);
+
+  dsCOUNT=1;
+  fprintf('\nStarting Processing Loop\n');
+  for k=1:EndingFrame
+      cdataRGB = readFrame(Film);
+      fprintf('\n%d',k);
+      if k<StartingFrame
+          continue
+      end
+      if dsCOUNT<dsFactor
+          dsCOUNT=dsCOUNT+1;
+          continue
+      else
+          dsCOUNT=1;
+      end
+          
+     cdataBW_ThresholdValue=im2bw(cdataRGB,ThresholdValue);     
      cdataWB_ThresholdValue=zeros(size(cdataBW_ThresholdValue,1),size(cdataBW_ThresholdValue,2));
      cdataWB_ThresholdValue(find(cdataBW_ThresholdValue==0))=1;
      Clean_cdataWB_ThresholdValue = bwareaopen(cdataWB_ThresholdValue, MousePixelSize);
@@ -131,10 +137,11 @@ function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFra
         MF_indx(MissedFrame) = k;
  
     end
-        
+    
+    hold off;  
     TempNameStartPoint=strfind(Movie_fn, '\');
-    if mod(k,round(0.01*((EndingFrame-StartingFrame)/dsFactor)))==0
-        fprintf('\t%g%% Complete\n', round(k./EndingFrame*100,2));
+    if mod(k,round(0.01*ceil((EndingFrame-StartingFrame)/dsFactor)))==0
+        fprintf('\tFrame %d of %d complete', k,EndingFrame);
     end
         
   end %Frame loop
@@ -142,6 +149,13 @@ function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFra
   clear Film
   LastFrame=k;
   close all
+  %      if mod(k,0.05*(EndingFrame-StartingFrame)/dsFactor+StartingFrame)==0
+%       fprintf('On frame %d of %d',k-StartingFrame,floor((EndingFrame-StartingFrame)/dsFactor));
+%          fprintf('\n\t Elapsed Time: %0.2g\n',toc/60);
+%      end\
+%     fprintf('frame rate %d',FrameRate);
+%      cdataRGB=readvideoindex(Film,k,FrameRate); %cdataRGB = read(Film,k);
+  
   
 end
   

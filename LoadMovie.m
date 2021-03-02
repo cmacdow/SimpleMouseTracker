@@ -3,9 +3,9 @@ function [Movie_fn, CurrentFrameData, LastOpenDirectory] = LoadMovie(HandlesForG
 %   Detailed explanation goes here
 
   if isempty(LastOpenDirectory)
-     [File,Path]=uigetfile({'*.avi';'.mp4'},'Please select an movie file or multiple movie files','MultiSelect', 'on');
+     [File,Path]=uigetfile('*.','Please select an movie file or multiple movie files','MultiSelect', 'on');
   else
-     [File,Path]=uigetfile({'*.avi';'.mp4'},'Please select an movie file or multiple movie files','MultiSelect', 'on',LastOpenDirectory); 
+     [File,Path]=uigetfile('*.','Please select an movie file or multiple movie files','MultiSelect', 'on',LastOpenDirectory); 
   end
   Movie_fn=[Path,File]; 
   LastOpenDirectory=Path;

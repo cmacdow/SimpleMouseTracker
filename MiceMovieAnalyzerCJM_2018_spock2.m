@@ -1,32 +1,30 @@
-function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFrame]=MiceMovieAnalyzerCJM_2018_batch(Movie_fn,StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,InteractionZones,ThresholdValue,MousePixelSize,dsFactor)
+function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFrame]=MiceMovieAnalyzerCJM_2018_spock2(Movie_fn,StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,InteractionZones,ThresholdValue,MousePixelSize,dsFactor)
    %%%%% The purpose of this function is to analyze the behavioral data.
    %%%%% It can evaluate general features about a single mouse
    %%%%% behavior, such as location and its derivatives.
    %%%%% It is also usefull for analyzing social recognition paradigms
    %%%%% and evaluate the time spent near a noval versus familiar conspecifics.
-   %%%%% The addition in this algorism is for tracking the mouse nose and
-   %%%%% directionality.
    
-    
   MissedFrame =0;
   MouseLoc=[];
   InteractionTimes=cell(1,2);
   CompartmentTimes=cell(1,3);
-  %Film = VideoReader(Movie_fn);
   MF_indx(1) = StartingFrame;  
-%   EndingFrame = StartingFrame+(600*30);
- Film = VideoReader(Movie_fn);
-  for k=StartingFrame:dsFactor:EndingFrame
-     %%%%% open the image, convert it to black and white and clean it from noise 
-     %%%%% High and low thresholds in this algorithm are used for detection
-     %%%%% of the tail outside of the ellipse fitted to the mouse
-     %%%%% boundaries. low threshold is for finding the ellipse and high
-     %%%%% threshold is for finding the tail outside of the ellipse.
-     cdataRGB=read(Film,k);
-     cdataBW_ThresholdValue=im2bw(cdataRGB,ThresholdValue);
+  fprintf('starting')
+  
+  %get file info
+  [temppath,tempfn] = fileparts(Movie_fn);       
+  fnCOUNT =0;
+  N = size(dir([temppath,filesep,tempfn,'*.jpg']),1);
+  
+  for k=1:N
+     fnCOUNT=fnCOUNT+1;
+     cdataBW_ThresholdValue = load([temppath filesep tempfn,sprintf('%d.mat',fnCOUNT)],'cdataBW_ThresholdValue');    
+     cdataBW_ThresholdValue=cdataBW_ThresholdValue.cdataBW_ThresholdValue;
      cdataWB_ThresholdValue=zeros(size(cdataBW_ThresholdValue,1),size(cdataBW_ThresholdValue,2));
      cdataWB_ThresholdValue(find(cdataBW_ThresholdValue==0))=1;
-     Clean_cdataWB_ThresholdValue = bwareaopen(cdataWB_ThresholdValue, MousePixelSize);
+     Clean_cdataWB_ThresholdValue = bwareaopen(cdataWB_ThresholdValue, MousePixelSize);     
+     
      %%%%% exclude pixels that were excluded from the image by the user
      if exist('AllExcludedAreas')
          for i=1:length(AllExcludedAreas)
@@ -39,20 +37,6 @@ function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFra
          end
      else
      end
-
-     %%%%% change the areas of the stimuli in the clean black and white
-     %%%%% image ('Clean_cdataWB') to black. For avoiding searching the
-     %%%%% subject mouse location in them.
-%      if exist('InteractionZones')
-%      for i=1:length(InteractionZones)
-%         InteractionPixels=[];
-%         InteractionPixels=InteractionZones{1,i}; 
-%         for j=1:size(InteractionPixels,1)
-%            Clean_cdataWB_ThresholdValue(InteractionPixels(j,1),InteractionPixels(j,2))=0; 
-%            Clean_cdataWB_ThresholdValue(InteractionPixels(j,1),InteractionPixels(j,2))=0; 
-%         end 
-%      end
-%      end
 
      %%%%% look for boundaries of the mouse with high and low thresholds
      BoundariesWB_Threshold = bwboundaries(Clean_cdataWB_ThresholdValue);
@@ -84,7 +68,7 @@ function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFra
               AllInteractionBoundariesPixels{1,i}=InteractionBoundariesPixels{1,1};
            end
         end 
-        firstFrame=cdataRGB; %%%%% This parameter is saved for returning the first image of the analysis for presentation requirments 
+        firstFrame=cdataBW_ThresholdValue; %%%%% This parameter is saved for returning the first image of the analysis for presentation requirments 
      end
 
      
@@ -131,12 +115,14 @@ function  [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,LastFra
         MF_indx(MissedFrame) = k;
  
     end
-        
+     
     TempNameStartPoint=strfind(Movie_fn, '\');
-    if mod(k,round(0.01*((EndingFrame-StartingFrame)/dsFactor)))==0
+    if mod(k,round(0.01*EndingFrame))==0
         fprintf('\t%g%% Complete\n', round(k./EndingFrame*100,2));
     end
-        
+
+  %delete the frame 
+  delete([temppath filesep tempfn,sprintf('%d.mat',fnCOUNT)]);
   end %Frame loop
   
   clear Film
