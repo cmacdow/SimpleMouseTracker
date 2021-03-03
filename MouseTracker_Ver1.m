@@ -413,7 +413,8 @@ switch SelectedAlgorithm
           SaveMovie,ThresholdValue,MousePixelSize,dsFactor);
       set(HandlesForGUIControls.StatusBar,'string','Finished analyzing');
       if SaveData==1
-         Save_fn=[Movie_fn '_video_data_results', '.mat'];
+         [file_path,Save_fn] = fileparts(Movie_fn);
+         Save_fn=[file_path filesep Save_fn '_' ExpType '_video_data_results', '.mat'];
          save(Save_fn,'Movie_fn','LastFrame','firstFrame',...
              'AllExcludedAreas','CompartmentsPositions','InteractionZones',...
          'MouseLoc','InteractionTimes','CompartmentTimes','ThresholdValue',...
@@ -431,7 +432,7 @@ switch SelectedAlgorithm
           SaveMovie,ThresholdValue,MousePixelSize,dsFactor);
       set(HandlesForGUIControls.StatusBar,'string','Finished analyzing');
       if SaveData==1
-         Save_fn=[Movie_fn '_video_data_results', '.mat'];
+         Save_fn=[file_path filesep Save_fn '_' ExpType '_video_data_results', '.mat'];
          save(Save_fn,'Movie_fn','LastFrame','firstFrame',...
              'AllExcludedAreas','CompartmentsPositions','InteractionZones',...
          'MouseLoc','InteractionTimes','CompartmentTimes','ThresholdValue',...
@@ -813,8 +814,8 @@ global ExpType;
 
 set(HandlesForGUIControls.StatusBar,'string','Analysis Parameters Saved For Batch Processing');
 %remove the extension on the movie name
-[~,Save_fn] = fileparts(Movie_fn);
-Save_fn=[Save_fn '_' ExpType '_batchConfig', '.mat'];
+[file_path,Save_fn] = fileparts(Movie_fn);
+Save_fn=[file_path filesep Save_fn '_' ExpType '_batchConfig', '.mat'];
 save(Save_fn,'Movie_fn','StartingFrame','EndingFrame',...
  'AllExcludedAreas','CompartmentsPositions','InteractionZones',...
  'ThresholdValue','AnalysisDuration', 'MousePixelSize','dsFactor','MouseNum','ExpType');
