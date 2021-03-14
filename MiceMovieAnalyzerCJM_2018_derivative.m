@@ -28,12 +28,20 @@ global StopAnalysis
      %%%%% boundaries. low threshold is for finding the ellipse and high
      %%%%% threshold is for finding the tail outside of the ellipse.
      cdataRGB = read(Film,k);
-     cdataBW_ThresholdValue = sum(imbinarize(read(Film,k)-read(Film,k+1)),3);
-     %open to get rid of spot noise
-     Clean_cdataWB_ThresholdValue = bwareaopen(cdataBW_ThresholdValue, MousePixelSize); 
-     %close to seal mouse
-     se = strel('disk',MousePixelSize);
-     Clean_cdataWB_ThresholdValue = imclose(Clean_cdataWB_ThresholdValue,se);
+     cdataBW_ThresholdValue = zeros(size(cdataRGB,1),size(cdataRGB,2),dsFactor);
+     Clean_cdataWB_ThresholdValue = zeros(size(cdataRGB,1),size(cdataRGB,2),dsFactor);
+     for i = 1:dsFactor
+        cdataBW_ThresholdValue(:,:,i) = sum(imbinarize(read(Film,k+i-1)-read(Film,k+i)),3);        
+        %open to get rid of spot noise
+        Clean_cdataWB_ThresholdValue(:,:,i) = bwareaopen(cdataBW_ThresholdValue(:,:,i), MousePixelSize); 
+        %close to seal mouse
+        se = strel('disk',MousePixelSize);
+        Clean_cdataWB_ThresholdValue(:,:,i) = imclose(Clean_cdataWB_ThresholdValue(:,:,i),se);
+     end
+     Clean_cdataWB_ThresholdValue = sum(Clean_cdataWB_ThresholdValue,3);
+     Clean_cdataWB_ThresholdValue(Clean_cdataWB_ThresholdValue>0)=1;
+     cdataBW_ThresholdValue = sum(cdataBW_ThresholdValue,3);
+     cdataBW_ThresholdValue(cdataBW_ThresholdValue>0)=1;
    
      
      %%%%% exclude pixels that were excluded from the image by the user

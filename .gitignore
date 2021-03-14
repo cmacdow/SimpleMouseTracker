@@ -2,3 +2,6 @@ testAVIs/
 html
 *.asv
 *.mat
+*.out
+ssh2_v2_m1_r7/
+PathsToProcess/

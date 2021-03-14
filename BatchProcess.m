@@ -13,6 +13,10 @@ end
 %% set options
 opts.overwrite = 1; %moving window duration (in s)
 opts.configStr = '_batchConfig.mat';
+opts.algorithm = 'MiceMovieAnalyzerCJM_2018_derivative_batch';
+opts.save_dir = 'Z:\Projects\Cortical Dynamics\Mouse Models of Autism\Behavioral Analysis\repetitive grooming';
+opts.cropmovie = 1; 
+opts.isjbp =0;
 opts = ParseOptionalInputs(opts,varargin);
 
 %% Process
@@ -31,11 +35,26 @@ tic
 Not_processed = {};
 for cur_fn = 1:length(file_list)
     load(file_list{cur_fn})  
+    %remove anything done on a mac
+    if ~isempty(regexp(Movie_fn,'Volumes','once'))
+       Movie_fn = strrep(Movie_fn,'/Volumes/buschman/','Z:\');
+       Movie_fn = strrep(Movie_fn,'/','\');
+    end    
     if ~ispc %%is spock then convert to unix path
         Movie_fn = ConvertToBucketPath(Movie_fn,Movie_fn(1:3));
     end
-%     try             
-        save_fn=[Movie_fn ,'_AnalysisResults_batch', '.mat'];
+    try 
+        if opts.isjbp %parse by the section
+            [movie_path, movie_name] = fileparts(file_list{cur_fn});
+            movie_name = erase(movie_name,'_batchConfig');
+        else
+            [movie_path, movie_name] = fileparts(Movie_fn);
+        end
+        if isempty(opts.save_dir) %save in same directory as movie            
+            save_fn=[movie_path filesep movie_name,'_AnalysisResults_batch', '.mat'];            
+        else %save in target directory            
+            save_fn=[opts.save_dir filesep movie_name,'_AnalysisResults_batch', '.mat'];
+        end
         if opts.overwrite ==0 &&  exist(save_fn, 'file') == 2 %overwrite option to avoid re-analyzing the same files
             fprintf('\n\tFile %d has already been processed so skipping that file...\n',cur_fn)
             continue
@@ -43,15 +62,29 @@ for cur_fn = 1:length(file_list)
             if ispc %run using the usual function
                 fprintf('\nCurrently Processing File %d out of %d...\n',cur_fn,length(file_list))
                 fprintf('\nFileName %s\n',Movie_fn)
-                [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,...
-                LastFrame]=MiceMovieAnalyzerCJM_2018_batch(Movie_fn,...
-                StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,...
-                InteractionZones,ThresholdValue,MousePixelSize,dsFactor);
+                switch opts.algorithm
+                    case 'MiceMovieAnalyzerCJM_2018_batch'
+                        [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,...
+                        LastFrame]=MiceMovieAnalyzerCJM_2018_batch(Movie_fn,...
+                        StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,...
+                        InteractionZones,ThresholdValue,MousePixelSize,dsFactor);
+                    case 'MiceMovieAnalyzerCJM_2018_derivative_batch'
+                        [MF_indx,MouseLoc,InteractionTimes,CompartmentTimes,firstFrame,...
+                        LastFrame]=MiceMovieAnalyzerCJM_2018_derivative_batch(Movie_fn,...
+                        StartingFrame,EndingFrame,AllExcludedAreas,CompartmentsPositions,...
+                        InteractionZones,ThresholdValue,MousePixelSize,dsFactor);
+                    otherwise 
+                        error('unknown processing algorithm')
+                end
                 save(save_fn,'Movie_fn','LastFrame','firstFrame',...
                 'AllExcludedAreas','CompartmentsPositions','InteractionZones',...
                 'MouseLoc','InteractionTimes','CompartmentTimes','ThresholdValue',...
                 'StartingFrame','EndingFrame','MF_indx',...
-                'AnalysisDuration','MouseNum','ExpType');
+                'AnalysisDuration','MouseNum','ExpType','dsFactor','opts');
+                if opts.cropmovie
+                   DynamicCropping(save_fn)
+                end
+                
             else %use spock compatible version
                 fprintf('\nCurrently Processing File %d out of %d...\n',cur_fn,length(file_list))
                 fprintf('\nFileName %s\n',Movie_fn)
@@ -64,17 +97,17 @@ for cur_fn = 1:length(file_list)
                 'AllExcludedAreas','CompartmentsPositions','InteractionZones',...
                 'MouseLoc','InteractionTimes','CompartmentTimes','ThresholdValue',...
                 'StartingFrame','EndingFrame','MF_indx',...
-                'AnalysisDuration','MouseNum','ExpType');
+                'AnalysisDuration','MouseNum','ExpType','dsFactor','opts');
             end
                 
         end
         fprintf('\n\n Finished File %d, Elapsed Time: %0.2g\n',cur_fn,toc/60)
-%     catch
-%         fprintf('\n\n Skipping File %d, Elapsed Time: %0.2g\n',cur_fn,toc/60)
-%         Not_processed{fail_cnt} = file_list{cur_fn};
-%         fail_cnt = fail_cnt +1; 
-%         continue
-%     end    
+    catch
+        fprintf('\n\n Skipping File %d, Elapsed Time: %0.2g\n',cur_fn,toc/60)
+        Not_processed{fail_cnt} = file_list{cur_fn};
+        fail_cnt = fail_cnt +1; 
+        continue
+    end    
 end
 fprintf('\nCompleted Batch Processing of %d files \n Elapsed Time: %0.2g\n',length(file_list),toc/60)
 
