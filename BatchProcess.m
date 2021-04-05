@@ -13,10 +13,10 @@ end
 %% set options
 opts.overwrite = 1; %moving window duration (in s)
 opts.configStr = '_batchConfig.mat';
-opts.algorithm = 'MiceMovieAnalyzerCJM_2018_derivative_batch';
-opts.save_dir = 'Z:\Projects\Cortical Dynamics\Mouse Models of Autism\Behavioral Analysis\repetitive grooming';
-opts.cropmovie = 1; 
-opts.isjbp =0;
+opts.algorithm = 'MiceMovieAnalyzerCJM_2018_batch';
+opts.save_dir = 'Z:\Projects\Cortical Dynamics\Mouse Models of Autism\Behavioral Analysis\tobemoved';
+opts.cropmovie = 0; 
+opts.isjbp =1;
 opts = ParseOptionalInputs(opts,varargin);
 
 %% Process
