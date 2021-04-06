@@ -95,7 +95,7 @@ for cur_fn = 1:length(config_fns)
    end  
 
 % plot of mouse's location, with boxes around SA and SN compartments
-    if sum(analysis.MouseNum == [309, 310]) >= 1
+    if sum(analysis.MouseNum == [310]) >= 1
        MouseLoc_smooth = SmoothMouseLocation(analysis.MouseLoc,20);
        analysis.MouseLoc(:,1) = MouseLoc_smooth(:,1);
        analysis.MouseLoc(:,2) = MouseLoc_smooth(:,2);       
