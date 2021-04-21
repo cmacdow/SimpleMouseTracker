@@ -44,6 +44,7 @@ for cur_fn = 1:length(file_list)
         Movie_fn = ConvertToBucketPath(Movie_fn,Movie_fn(1:3));
     end
     try 
+%         Movie_fn = 'Z:\Rodent Data\ASD Models\juvenille bedding preference\SHANK\cohort 4 videos\videos\332-shank.mp4';
         if opts.isjbp %parse by the section
             [movie_path, movie_name] = fileparts(file_list{cur_fn});
             movie_name = erase(movie_name,'_batchConfig');
